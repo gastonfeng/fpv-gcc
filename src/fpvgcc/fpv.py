@@ -17,12 +17,13 @@
 # along with fpv-gcc.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import with_statement
 from __future__ import print_function
-from six import iteritems
+from __future__ import with_statement
 
-import re
 import logging
+import re
+
+from six import iteritems
 
 from .gccMemoryMap import GCCMemoryMap, MemoryRegion
 from .profiles import get_profile
@@ -87,23 +88,27 @@ re_b1_file = re.compile(
     r'^\s+(?P<folder>.*/)?(?P<file>:|(.+?)(?:(\.[^.]*)))\((?P<symbol>.*)\)$'
 )
 re_comsym_normal = re.compile(
-    r'^(?P<symbol>\S*)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'  # noqa
+    r'^(?P<symbol>\S*)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'
+    # noqa
 )
 re_comsym_nameonly = re.compile(
     r'^(?P<symbol>\S*)$'
 )
 re_comsym_detailonly = re.compile(
-    r'^\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'  # noqa
+    r'^\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'
+    # noqa
 )
 
 re_sectionelem = re.compile(
-    r'^(?P<treepath>\.\S*)\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'  # noqa
+    r'^(?P<treepath>\.\S*)\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'
+    # noqa
 )
 re_sectionelem_nameonly = re.compile(
     r'^(?P<symbol>\.\S*)$'
 )
 re_sectionelem_detailonly = re.compile(
-    r'^\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'  # noqa
+    r'^\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<size>0[xX][0-9a-fA-F]+)\s+(?P<filefolder>.*/)?(?P<archivefile>:|.+?(?:\.[^.]*))\((?P<objfile>.*)\)$'
+    # noqa
 )
 
 re_memregion = re.compile(
@@ -116,21 +121,28 @@ re_linkermap = {
     'DEFN_ADDR': re.compile(
         r'^\s+(?P<origin>0[xX][0-9a-fA-F]+)\s+(?P<name>.*)\s=\s+(?P<defn>0[xX][0-9a-fA-F]+)$'),  # noqa
     'SECTION_HEADINGS': re.compile(
-        r'^(?P<name>[._]\S*)(?:\s+(?P<address>0[xX][0-9a-fA-F]+))?(?:\s+(?P<size>0[xX][0-9a-fA-F]+))?(?:\s+load address\s+(?P<loadaddress>0[xX][0-9a-fA-F]+))?$'),  # noqa
+        r'^(?P<name>[._]\S*)(?:\s+(?P<address>0[xX][0-9a-fA-F]+))?(?:\s+(?P<size>0[xX][0-9a-fA-F]+))?(?:\s+load address\s+(?P<loadaddress>0[xX][0-9a-fA-F]+))?$'),
+    # noqa
     'SYMBOL': re.compile(
-        r'^\s(?P<name>\S+)(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))\s+(?P<filefolder>.*/)?(?P<file>:|.+?(?:\.[^.\)]*))?(?:\((?P<file2>\S*)\))?$'),  # noqa
+        r'^\s(?P<name>\S+)(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))\s+(?P<filefolder>.*/)?(?P<file>:|.+?(?:\.[^.\)]*))?(?:\((?P<file2>\S*)\))?$'),
+    # noqa
     'FILL': re.compile(
         r'^\s(?:\*fill\*)(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))$'),  # noqa
     'SYMBOLONLY':
         re.compile(r'^\s(?P<name>[._]\S+)$'),
     'SYMBOLDETAIL': re.compile(
-        r'^\s+(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))\s+(?P<filefolder>.*/)?(?P<file>:|.+?(?:\.[^.\)]*))?(?:\((?P<file2>\S*)\))?$'),  # noqa
+        r'^\s+(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))\s+(?P<filefolder>.*/)?(?P<file>:|.+?(?:\.[^.\)]*))?(?:\((?P<file2>\S*)\))?$'),
+    # noqa
     'SECTIONDETAIL': re.compile(
         r'^\s+(?:\s+(?P<address>0[xX][0-9a-fA-F]+))(?:\s+(?P<size>0[xX][0-9a-fA-F]+))$'),  # noqa
     'SECTIONHEADINGONLY':
         re.compile(r'^(?P<name>[._]\S+)$'),
     'LINKALIASES': re.compile(
-        r'^\s\*\(((?:[^\s\*\(\)]+(?:\*|)\s)*(?:[^\s\*\(\)]+(?:\*|)))\)$')  # noqa
+        r'^\s\*\(((?:[^\s\*\(\)]+(?:\*|)\s)*(?:[^\s\*\(\)]+(?:\*|)))\)$'),  # noqa
+    'ALIGN': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+\.\s+=\s+ALIGN\s+\(0[xX][0-9]\)\n'),
+    'VECTOR_ISR': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+VECTOR_ISR = \.\n'),
+    'SYMBOLSIMPLE':re.compile(r'^\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<name>[\w :<>(*)&~=,]*)\n'),
+    'FUNCTION': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+([\w :]*)(\([\w *,]*\))\n')
 }
 
 
@@ -203,7 +215,7 @@ class CommonSymbol(object):
     def __repr__(self):
         r = '{0:.<30}{1:<8}{2:<20}{3:<40}{4}'.format(
             self.symbol, self.size or '', self.objfile or '',
-            self.archivefile or '', self.filefolder or ''
+                         self.archivefile or '', self.filefolder or ''
         )
         return r
 
@@ -531,6 +543,15 @@ def process_linkermap_line(l, sm):
         if re_linkermap['SYMBOLONLY'].match(l):
             process_linkermap_symbolonly_line(l, sm)
             return
+        if re_linkermap['ALIGN'].match(l):
+            return
+        if re_linkermap['VECTOR_ISR'].match(l):
+            return
+        if re_linkermap['SYMBOLSIMPLE'].match(l):
+            process_linkermap_symbol_line(l, sm)
+            return
+        if re_linkermap['FUNCTION'].match(l):
+            return
         logging.warning("Unhandled line in section : {0}".format(l.strip()))
     return None
 
@@ -574,4 +595,5 @@ def process_map_file(fname, profile=None):
 
 if __name__ == '__main__':
     from .cli import main
+
     main()
