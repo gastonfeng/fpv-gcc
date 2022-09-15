@@ -141,8 +141,9 @@ re_linkermap = {
         r'^\s\*\(((?:[^\s\*\(\)]+(?:\*|)\s)*(?:[^\s\*\(\)]+(?:\*|)))\)$'),  # noqa
     'ALIGN': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+\.\s+=\s+ALIGN\s+\(0[xX][0-9]\)\n'),
     'VECTOR_ISR': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+VECTOR_ISR = \.\n'),
-    'SYMBOLSIMPLE':re.compile(r'^\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<name>[\w :<>(*)&~=,]*)\n'),
-    'FUNCTION': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+([\w :]*)(\([\w *,]*\))\n')
+    'SYMBOLSIMPLE': re.compile(r'^\s+(?P<address>0[xX][0-9a-fA-F]+)\s+(?P<name>[\w :<>(*)&~=,]*)\n'),
+    'FUNCTION': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+([\w :]*)(\([\w *,]*\))\n'),
+    'g_pfnVectors': re.compile(r'^\s+(0[xX][0-9a-fA-F]+)\s+g_pfnVectors\n')
 }
 
 
@@ -521,6 +522,9 @@ def process_linkermap_line(l, sm):
                 if key == 'SECTION_HEADINGS':
                     process_linkermap_section_headings_line(l, sm)
                     return
+                if key == 'SYMBOLSIMPLE':
+                    # process_linkermap_symbol_line(l, sm)
+                    return
                 logging.error(
                     "Unhandled line in linkerm : {0}".format(l.strip()))
     elif sm.LINKERMAP_STATE == 'IN_SECTION':
@@ -547,8 +551,10 @@ def process_linkermap_line(l, sm):
             return
         if re_linkermap['VECTOR_ISR'].match(l):
             return
+        if re_linkermap['g_pfnVectors'].match(l):
+            return
         if re_linkermap['SYMBOLSIMPLE'].match(l):
-            process_linkermap_symbol_line(l, sm)
+            # process_linkermap_symbol_line(l, sm)
             return
         if re_linkermap['FUNCTION'].match(l):
             return
